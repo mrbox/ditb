@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import types
+from django.core.cache import cache
 
 def value_cache(attr_name=None):
     """
@@ -58,7 +59,32 @@ def value_cache(attr_name=None):
         return decorate_inside
 
     attr_type = type(an)
-    if attr_type == types.MethodType or attr_type == types.FunctionType: #jesli nie ma argumentu
+    if attr_type == types.MethodType or attr_type == types.FunctionType: #if decorator is without argument
         return decorate(an)
+    else:
+        return decorate
+
+def django_value_cache(cache_key=None, cache_timeout=300):
+    """
+    Decorator used to autocaching method result in Django cache
+    """
+    ck = cache_key
+    ct = cache_timeout
+
+    def decorate(function):
+        def decorate_inside(self, *args, **kwargs):
+            cache_key = ck if isinstance(ck, types.StringTypes) else "_val_%s" % function.__name__
+            value = cache.get(cache_key)
+            if value is not None:
+                return value
+            real_value = function(self, *args, **kwargs)
+            cache.set(cache_key,real_value,ct)
+            return real_value
+
+        return decorate_inside
+
+    attr_type = type(ck)
+    if attr_type == types.MethodType or attr_type == types.FunctionType: #if decorator is without argument
+        return decorate(ck)
     else:
         return decorate
