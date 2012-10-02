@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import types
 
-
-
 cache_error = False
 try:
     from django.core.cache import cache
